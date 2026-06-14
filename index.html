@@ -5,114 +5,134 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard - Rendimiento y Permanencia Universitaria</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
   :root {
-    --blue: #2E75B6; --dark: #1F3864; --light: #D5E8F0;
-    --accent: #1abc9c; --red: #e74c3c; --gray: #595959;
-    --bg: #f0f4f8; --card: #ffffff;
+    --primary: #b43494; /* Magenta Institucional de la Universidad de la Ciudad */
+    --primary-dark: #822273;
+    --blue-kpi: #2E75B6; 
+    --dark: #1F3864; 
+    --light: #F9F5FB;
+    --accent: #1abc9c; 
+    --red: #e74c3c; 
+    --gray: #595959;
+    --bg: #f4f6f9; 
+    --card: #ffffff;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, sans-serif; background: var(--bg); color: #333; }
-  header {
-    background: linear-gradient(135deg, var(--dark), var(--blue));
-    color: white; padding: 20px 32px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  header h1 { font-size: 20px; font-weight: bold; }
-  header p { font-size: 12px; opacity: 0.8; margin-top: 4px; }
-  .badge { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: #333; }
   
-  /* Indicador de estado de carga automatizada */
+  header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: white; padding: 24px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .header-title-area { display: flex; align-items: center; gap: 20px; }
+  .logo-uni { height: 65px; background: white; padding: 6px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  header h1 { font-size: 22px; font-weight: bold; }
+  header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+  .badge { background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+  
   .status-zone {
-    background: #e1f5fe; padding: 12px 32px;
-    display: flex; align-items: center; gap: 14px;
-    border-bottom: 1px dashed var(--blue);
-    font-size: 13px; font-weight: bold; color: var(--dark);
+    background: #fff; padding: 10px 32px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #e2e8f0; font-size: 12px; color: #64748b;
   }
-  .status-dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: #ffb300; display: inline-block;
-  }
-  .status-dot.loaded { background: var(--accent); }
-  .status-dot.error { background: var(--red); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ffb300; }
+  .status-dot.loaded { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
 
   .filters {
-    background: white; padding: 14px 32px;
+    background: white; padding: 16px 32px;
     display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
-    border-bottom: 2px solid var(--light);
-    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-bottom: 2px solid #e2e8f0;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   }
-  .filters label { font-size: 12px; color: var(--gray); font-weight: bold; }
+  .filters label { font-size: 12px; color: var(--gray); font-weight: bold; text-transform: uppercase; }
   .filters select {
-    padding: 6px 10px; border: 1.5px solid var(--light); border-radius: 6px;
-    font-size: 13px; color: var(--dark); background: white; cursor: pointer; min-width: 140px;
+    padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px;
+    font-size: 13px; color: #1e293b; background: white; cursor: pointer; min-width: 150px; transition: border-color 0.2s;
   }
-  .filters select:focus { outline: none; border-color: var(--blue); }
+  .filters select:focus { outline: none; border-color: var(--primary); }
   .filter-group { display: flex; flex-direction: column; gap: 4px; }
   .btn-reset {
-    padding: 6px 16px; background: var(--blue); color: white;
-    border: none; border-radius: 6px; cursor: pointer; font-size: 13px; margin-left: auto;
+    padding: 8px 18px; background: var(--primary); color: white;
+    border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; margin-left: auto;
+    transition: background 0.2s;
   }
-  .btn-reset:hover { background: var(--dark); }
-  main { padding: 24px 32px; }
+  .btn-reset:hover { background: var(--primary-dark); }
+  
+  main { padding: 24px 32px; max-width: 1600px; margin: 0 auto; }
+  #n-records { font-size: 13px; color: var(--gray); margin-bottom: 16px; font-weight: 500; }
+  
+  /* KPIs */
   .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
   .kpi {
     background: var(--card); border-radius: 10px; padding: 16px 18px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-top: 4px solid var(--blue);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-top: 4px solid var(--blue-kpi);
+    display: flex; flex-direction: column; justify-content: space-between;
   }
-  .kpi .label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; }
-  .kpi .value { font-size: 28px; font-weight: bold; color: var(--dark); margin: 6px 0 2px; }
+  .kpi .label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
+  .kpi .value { font-size: 28px; font-weight: bold; color: #0f172a; margin: 6px 0 2px; }
   .kpi .sub { font-size: 11px; color: var(--gray); }
   .kpi.green { border-color: var(--accent); }
   .kpi.red { border-color: var(--red); }
+  
+  /* Gráficos */
   .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
   .chart-card {
     background: var(--card); border-radius: 10px; padding: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   }
   .chart-card.wide { grid-column: 1 / -1; }
   .chart-card h3 {
-    font-size: 13px; color: var(--dark); margin-bottom: 14px;
-    font-weight: bold; border-left: 3px solid var(--blue); padding-left: 8px;
+    font-size: 13px; color: #0f172a; margin-bottom: 14px;
+    font-weight: bold; border-left: 3px solid var(--primary); padding-left: 8px;
   }
   .chart-card canvas { max-height: 280px; }
   .chart-card.wide canvas { max-height: 220px; }
+  
+  /* Tabla */
   .table-card {
     background: var(--card); border-radius: 10px; padding: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 24px;
   }
   .table-card h3 {
-    font-size: 13px; color: var(--dark); margin-bottom: 14px;
-    font-weight: bold; border-left: 3px solid var(--blue); padding-left: 8px;
+    font-size: 13px; color: #0f172a; margin-bottom: 14px;
+    font-weight: bold; border-left: 3px solid var(--primary); padding-left: 8px;
   }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead tr { background: var(--dark); color: white; }
-  thead th { padding: 10px 14px; text-align: left; font-weight: bold; font-size: 12px; }
-  tbody tr:nth-child(even) { background: var(--light); }
-  tbody tr:hover { background: #bee3f5; }
-  tbody td { padding: 9px 14px; }
-  #n-records { font-size: 12px; color: var(--gray); margin-bottom: 16px; }
-  footer { text-align: center; padding: 16px; font-size: 12px; color: var(--gray); border-top: 1px solid var(--light); margin-top: 8px; }
+  thead tr { background: #1e293b; color: white; }
+  thead th { padding: 12px 14px; text-align: left; font-weight: bold; font-size: 12px; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #f1f5f9; }
+  tbody td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; }
+  
+  footer { text-align: center; padding: 20px; font-size: 12px; color: var(--gray); border-top: 1px solid #e2e8f0; margin-top: 16px; }
   @media (max-width: 900px) {
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    .charts-grid { grid-column: 1 !important; grid-template-columns: 1fr; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .chart-card.wide { grid-column: auto; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <h1>&#128202; Rendimiento Académico y Permanencia Universitaria</h1>
-    <p id="dashboard-sub">Herramientas de Análisis de Datos &middot; Grupo 4</p>
+  <div class="header-title-area">
+    <img src="Logo-universidad.png" alt="Logo Universidad de la Ciudad" class="logo-uni">
+    <div>
+      <h1>Rendimiento Académico y Permanencia Universitaria</h1>
+      <p id="dashboard-sub">Herramientas de Análisis de Datos &middot; Grupo 4</p>
+    </div>
   </div>
-  <span class="badge" id="count-badge">Cargando datos...</span>
+  <span class="badge" id="count-badge">Cargando...</span>
 </header>
 
-<div class="status-zone" id="status-zone">
-  <span class="status-dot" id="status-dot"></span>
-  <span id="status-text">Buscando archivo de datos 'alumnos_g4_processed.csv'...</span>
+<div class="status-zone">
+  <div class="status-dot" id="status-dot"></div>
+  <span id="status-text">Conectando de forma automatizada con 'alumnos_g4_processed.csv'...</span>
 </div>
 
 <div class="filters">
@@ -149,7 +169,8 @@
 </div>
 
 <main>
-  <p id="n-records">Esperando inicialización del dataset...</p>
+  <p id="n-records"></p>
+  
   <div class="kpi-grid">
     <div class="kpi"><div class="label">Promedio académico</div><div class="value" id="kpi-prom">&#8211;</div><div class="sub">sobre 10 puntos</div></div>
     <div class="kpi green"><div class="label">Índice de permanencia</div><div class="value" id="kpi-perm">&#8211;</div><div class="sub">promedio del segmento</div></div>
@@ -157,6 +178,7 @@
     <div class="kpi"><div class="label">Horas de estudio</div><div class="value" id="kpi-horas">&#8211;</div><div class="sub">promedio semanal</div></div>
     <div class="kpi red"><div class="label">Trabajan</div><div class="value" id="kpi-trabaja">&#8211;</div><div class="sub">del segmento</div></div>
   </div>
+
   <div class="charts-grid">
     <div class="chart-card"><h3>Promedio Académico por Carrera</h3><canvas id="chart-prom-carrera"></canvas></div>
     <div class="chart-card"><h3>Índice de Permanencia por Año de Cursada</h3><canvas id="chart-perm-anio"></canvas></div>
@@ -164,6 +186,7 @@
     <div class="chart-card"><h3>Distribución de Horas de Estudio Semanal</h3><canvas id="chart-horas-dist"></canvas></div>
     <div class="chart-card wide"><h3>Distribución de Asistencia (%)</h3><canvas id="chart-asist-dist"></canvas></div>
   </div>
+
   <div class="table-card">
     <h3>Resumen por Carrera</h3>
     <table>
@@ -176,55 +199,41 @@
     </table>
   </div>
 </main>
-<footer>TP Integrador &middot; Herramientas de Análisis de Datos &middot; Grupo 4 &middot; 2026</footer>
+
+<footer>TP Integrador &middot; Universidad de la Ciudad &middot; Grupo 4 &middot; 2026</footer>
 
 <script>
 let RAW = []; 
 let charts = {};
+const MAIN_COLOR = '#b43494';
 
-const BLUE = '#2E75B6', DARK = '#1F3864', LIGHT = '#D5E8F0', ACCENT = '#1abc9c', RED = '#e74c3c', GREEN = '#2ecc71';
-
-// Carga automatizada al iniciar la página desde el mismo servidor
 window.addEventListener('DOMContentLoaded', () => {
-  const datasetUrl = 'alumnos_g4_processed.csv'; // Ruta relativa al index.html
-  
-  fetch(datasetUrl)
+  fetch('alumnos_g4_processed.csv')
     .then(response => {
-      if (!response.ok) {
-        throw new Error(`No se pudo encontrar el archivo ${datasetUrl}. Asegurate de que esté subido en el mismo repositorio.`);
-      }
+      if (!response.ok) throw new Error("No se pudo leer el archivo CSV.");
       return response.text();
     })
     .then(text => {
       parseCSV(text);
-      const dot = document.getElementById('status-dot');
-      const txt = document.getElementById('status-text');
-      dot.classList.add('loaded');
-      txt.innerText = `Dataset integrado correctamente de forma estática (${RAW.length.toLocaleString()} registros de alumnos).`;
+      document.getElementById('status-dot').classList.add('loaded');
+      document.getElementById('status-text').innerText = "Dataset enlazado y procesado de forma automática.";
     })
     .catch(error => {
+      document.getElementById('status-text').innerText = "Error: asegurate de tener 'alumnos_g4_processed.csv' en la raíz de tu repo.";
       console.error(error);
-      const dot = document.getElementById('status-dot');
-      const txt = document.getElementById('status-text');
-      dot.classList.add('error');
-      txt.innerText = error.message;
-      document.getElementById('n-records').innerText = 'Error al cargar los datos en segundo plano.';
     });
 });
 
 function parseCSV(text) {
   const lines = text.split(/\r?\n/);
   if (lines.length < 2) return;
-
   const headers = lines[0].split(',');
   const result = [];
 
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
-    
     const currentline = lines[i].split(',');
     const obj = {};
-    
     headers.forEach((header, index) => {
       let val = currentline[index] ? currentline[index].trim() : "";
       if (!isNaN(val) && val !== "") {
@@ -235,11 +244,7 @@ function parseCSV(text) {
     });
     result.push(obj);
   }
-
   RAW = result;
-  
-  document.getElementById('dashboard-sub').innerText = `Herramientas de Análisis de Datos · Grupo 4 · Dataset: ${RAW.length.toLocaleString()} registros`;
-  
   initDropdowns();
   applyFilters();
 }
@@ -304,24 +309,20 @@ function applyFilters() {
   document.getElementById('count-badge').innerText = `${d.length.toLocaleString()} estudiantes`;
   document.getElementById('n-records').innerText = `Mostrando ${d.length.toLocaleString()} de ${RAW.length.toLocaleString()} registros según los filtros seleccionados.`;
 
-  if(!d.length) {
-    ['kpi-prom','kpi-perm','kpi-asist','kpi-horas','kpi-trabaja'].forEach(id=>document.getElementById(id).innerText='--');
-    return;
-  }
-
-  // Actualizar KPIs
+  // KPIs
   document.getElementById('kpi-prom').innerText = fmt(avg(d.map(r=>r.Promedio_Academico)));
   document.getElementById('kpi-perm').innerText = fmt(avg(d.map(r=>r.Indice_Permanencia)))+'%';
   document.getElementById('kpi-asist').innerText = fmt(avg(d.map(r=>r.Asistencia_Porcentaje)),1)+'%';
   document.getElementById('kpi-horas').innerText = fmt(avg(d.map(r=>r.Horas_Estudio_Semanal)),1);
   document.getElementById('kpi-trabaja').innerText = pct(d.filter(r=>r.Trabaja==='Si').length, d.length);
 
-  // Gráfico 1: Carrera vs Promedio
   const carreras = [...new Set(d.map(r=>r.Carrera).filter(Boolean))].sort();
+
+  // Gráfico 1: Carrera vs Promedio
   const cProms = carreras.map(c => avg(d.filter(r=>r.Carrera===c).map(r=>r.Promedio_Academico)));
   upsertChart('chart-prom-carrera', {
     type: 'bar',
-    data: { labels: carreras, datasets: [{ label: 'Promedio', data: cProms, backgroundColor: BLUE }] },
+    data: { labels: carreras, datasets: [{ label: 'Promedio', data: cProms, backgroundColor: MAIN_COLOR }] },
     options: { responsive: true, scales: { y: { min: 0, max: 10 } } }
   });
 
@@ -330,19 +331,19 @@ function applyFilters() {
   const aPerm = anios.map(a => avg(d.filter(r=>r.Anio_Cursada===a).map(r=>r.Indice_Permanencia)));
   upsertChart('chart-perm-anio', {
     type: 'line',
-    data: { labels: anios.map(a=>`Año ${a}`), datasets: [{ label: 'Permanencia (%)', data: aPerm, borderColor: ACCENT, tension: 0.2 }] },
+    data: { labels: anios.map(a=>`Año ${a}`), datasets: [{ label: 'Permanencia (%)', data: aPerm, borderColor: MAIN_COLOR, tension: 0.2 }] },
     options: { responsive: true, scales: { y: { min: 50, max: 100 } } }
   });
 
-  // Gráfico 3: Laboral vs Permanencia
+  // Gráfico 3: Permanencia vs Condición Laboral
   const tSi = d.filter(r=>r.Trabaja==='Si'), tNo = d.filter(r=>r.Trabaja==='No');
   upsertChart('chart-laboral', {
     type: 'bar',
     data: {
       labels: ['Trabaja', 'No Trabaja'],
       datasets: [
-        { label: 'Permanencia (%)', data: [avg(tSi.map(r=>r.Indice_Permanencia)), avg(tNo.map(r=>r.Indice_Permanencia))], backgroundColor: [RED, BLUE] },
-        { label: 'Asistencia (%)', data: [avg(tSi.map(r=>r.Asistencia_Porcentaje)), avg(tNo.map(r=>r.Asistencia_Porcentaje))], backgroundColor: [LIGHT, LIGHT] }
+        { label: 'Permanencia (%)', data: [avg(tSi.map(r=>r.Indice_Permanencia)), avg(tNo.map(r=>r.Indice_Permanencia))], backgroundColor: [MAIN_COLOR, '#475569'] },
+        { label: 'Asistencia (%)', data: [avg(tSi.map(r=>r.Asistencia_Porcentaje)), avg(tNo.map(r=>r.Asistencia_Porcentaje))], backgroundColor: ['#ebd3f0', '#cbd5e1'] }
       ]
     },
     options: { responsive: true }
@@ -353,7 +354,7 @@ function applyFilters() {
   const {labels:hl, counts:hc} = histogram(hData, 4);
   upsertChart('chart-horas-dist', {
     type: 'bar',
-    data: { labels: hl, datasets: [{ label: 'Estudiantes', data: hc, backgroundColor: DARK }] },
+    data: { labels: hl, datasets: [{ label: 'Estudiantes', data: hc, backgroundColor: '#1e293b' }] },
     options: { responsive: true }
   });
 
@@ -362,11 +363,11 @@ function applyFilters() {
   const {labels:al, counts:ac} = histogram(aData, 10);
   upsertChart('chart-asist-dist', {
     type: 'line',
-    data: { labels: al, datasets: [{ label: 'Estudiantes', data: ac, borderColor: GREEN, backgroundColor: GREEN+'33', fill: true, tension: 0.4 }] },
+    data: { labels: al, datasets: [{ label: 'Estudiantes', data: ac, borderColor: MAIN_COLOR, backgroundColor: '#b4349422', fill: true, tension: 0.4 }] },
     options: { responsive: true }
   });
 
-  // Tabla resumen inferior
+  // Tabla
   const tbody = document.getElementById('table-body');
   tbody.innerHTML = '';
   carreras.forEach(c => {
